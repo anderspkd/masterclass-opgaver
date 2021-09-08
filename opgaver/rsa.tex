@@ -1,0 +1,265 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, total={5.5in,8in}]{geometry}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{seqsplit}
+
+\newtheoremstyle{opgavedd}{1em}{1em}{\itshape}{0pt}{\bfseries}{:}{ }{\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}}
+
+\theoremstyle{opgavedd}
+\newtheorem{opgave}{Opgave}[section]
+
+\newcommand\Enc{\ensuremath{\mathsf{Enc}}}
+\newcommand\Dec{\ensuremath{\mathsf{Dec}}}
+
+\begin{document}
+\title{Opgavesæt. MasterClass i Matematik}
+\author{Aarhus Universitet}
+\date{2018}
+\maketitle
+
+\section{Kryptering med RSA}
+Her følger en kort opridsning af RSA, som vi senere skal bruge til at lave digitale
+signaturer.
+
+\paragraph{Nøgle generering.}
+Hvis Bob ønsker at lave et sæt RSA nøgler gøres det som følgende:
+\begin{enumerate}
+
+\item Vælg to meget store forskellige (mere end 150 cifre) primtal $p$ og $q$;
+
+\item Beregn $N = pq$ og $\varphi(N)=(p-1)(q-1)$;
+
+\item Vælg et heltal $e$ således at $0 < e < \varphi(N)$ og
+  $\mathsf{gcd}(e,\varphi(N))=1$;\footnote{Hvis $\mathsf{gcd}(a,b)=1$, så siges $a$ og $b$
+    at være \emph{indbyrdes primske}. Dvs.\@ at $a$ og $b$ ikke har nogen primfaktorer
+    tilfælles.}
+
+\item Beregn $d$ således at $ed\equiv 1\mod\varphi(N)$.
+
+\end{enumerate}
+Den offentlige nøgle er $pk=(N,e)$ ($pk$ står for ``\emph{public key}'') og den hemmelige
+nøgle er $sk=(N,d)$ ($sk$ står for ``\emph{secret key}''). Altså hængelåsen, som alle kan
+bruge til at ``låse'' beskeden inde eller kryptere den er $pk$, og den nøgle som Bob kan
+låse beskederne op, eller dekryptere dem med, er $sk$.
+
+\paragraph{Kryptering og dekryptering.}
+Hvis Alice vil sende en krypteret besked til Bob, og hun kender Bobs offentlige nøgle,
+kan hun gøre følgende:
+
+Betragt Alices besked (også kaldet \emph{klartekst}) $m$ som et heltal $< N$. Krypteringen af $m$ skrives som
+$\Enc(pk,m)$ og resultatet kaldes en \emph{ciffertekst}, her benævnt med $c$. En
+ciffertekst for $m$ med nøgle $pk$ udregnes som:
+\[
+  c = \Enc(pk, m) = m^{e}\mod N.
+\]
+Bob kan dekryptere $c$ ved hjælp af $sk$ (skrevet $\Dec(sk,c)$) med følgende
+beregning:
+\[
+  m = \Dec(sk, c) = c^{d}\mod N.
+\]
+
+\section{Usikker brug af et sikkert kryptosystem}
+
+Alice har hørt at det er meget svært at bryde RSA kryptosystemet, hvorfor hun vælger at
+bruge RSA til at sende en besked til Bob. De gør det på følgende måde:
+
+\begin{itemize}
+\item Bob vælger hemmelige primtal $p$ og $q$, og sender $N=pq=836201$ og $e=768641$ til
+  Alice;
+\item Alfabetets bogstaver nummereres så $\text{A}=0$, $\text{B}=1$, $\dots$,
+  $\text{Å}=28$;
+\item Hvert enkelt bogstav i beskeden krypteres hvert for sig med Bobs offentlige nøgle
+  hvorefter de sendes til Bob;
+\item Bob kan med sin hemmelige nøgle dekryptere de modtagne bogstaver, og læse beskeden.
+\end{itemize}
+
+\begin{opgave}
+  Forestil dig nu at du er Eva, som opsnapper beskeden
+  \begin{align*}
+    (399644, 407526, 424845, 407526, 391559, 598468&,\\
+    138351, 407526, 625324, 72718, 530887, 424845)
+  \end{align*}
+  Hvis i har en lommeregner, eller computer, kan i nok let faktorisere $N$, som stadig er
+  alt for lille, men prøv at finde ud af hvordan man let kan bryde krypteringen, også
+  selvom man ikke faktorisere $N$. Hint.\footnote{Hvordan ser beskeden ``E'' ud i krypteret
+  tilstand? Hvad med alfabetets andre bogstaver?}
+\end{opgave}
+
+En teknik til at modvirke dette problem er, at man holder hemmeligheden i de mindste par
+cifre, og så ``fylder op'' med tilfældige tal i de andre cifre indtil man har et tal med
+lige så mange cifre som $N$ har før man krypterer. Hvis man kan dekryptere er de
+tilfældige tal nemme at fjerne igen. F.eks.~kunne $E=4$ laves om til $4375\mathbf{04}$ før
+det krypteres, så kun de to sidste cifre indeholder beskeden.
+
+Når man gør dette krypteres den samme besked (det samme bogstav) ikke altid til det samme
+tal, og systemet kan derfor ikke brydes så let.
+
+\section{Beregning af store potenser}
+Når man skal regne på de meget store tal der i virkeligheden bruges til RSA, er det
+vigtigt at bruge de mest effektive metoder. Selvom computere er hurtige, går det alligevel
+alt for langsomt hvis vi ikke tænker os om når vi programmerer dem. Et eksempel: Forestil
+jer at i skal beregne $23^{17}\mod 33$ med blyant og papir, eller med lommeregner, der kun
+kan de grundlæggende regningsarter. Hvis man går i gang uden at tænke, ville man måske
+gøre som antydet her:
+\begin{align*}
+  23^{17} &\mod 33 = \\
+          & 23\cdot 23\cdot 23\cdot 23\cdot 23\cdot 23\cdot 23\cdot 23\cdot
+            23\cdot 23\cdot 23\cdot 23\cdot 23\cdot 23\cdot 23\cdot 23\cdot
+            23 \mod 33.
+\end{align*}
+Altså bare gange 23 med sig selv 17 gange. Det virker som en temmelig stor opgave, men vi
+har heldigvis en løsning.
+
+\begin{opgave}\label{opg-sqr-n-mul}
+  Argumenter for at:
+  \begin{align*}
+    23^{17}\mod 33 &= (23^{16}\mod 33)\cdot 23 \mod 33, \\
+    23^{16}\mod 33 &= (23^{8}\mod 33)(23^{8}\mod 33)\mod 33, \\
+    23^{8}\mod 33  &= (23^{4}\mod 33)(23^{4}\mod 33)\mod 33, \\
+    & \dots\text{ (fortsæt selv her.)}
+  \end{align*}
+  Og brug dette til at forklare hvordan $23^{17}\mod 33$ kan beregnes med kun 5
+  multiplikationer og divisioner.
+\end{opgave}
+
+Opgaven ovenfor er et eksempel på en generel teknik der hedder ``square and multiply''
+(opløft til anden, og gang sammen), som bruges i alle computerprogrammer der anvender
+RSA. Den er en helt nødvendig forudsætning for at RSA kan bruges til noget i praksis.
+
+For de skarpe knive i skuffen kommer her en opgave der går tættere på denne metode (denne
+opgave kan i evt.~vende tilbage til hvis der er tid). Først et faktum: ethvert positivt tal
+kan skrives, som en sum af 2-potenser (1,2,4,8, etc.). F.eks.:
+\begin{align*}
+  1 &= 1; &\quad  2 &= 2; &\quad 3 &= 1 + 2 &\quad 4 &= 4; \\
+  5 &= 4 +1; &\quad 6&=2+4; &\quad 7&=2+4+1; &\quad &\dots
+\end{align*}
+(Dem der kender til binære tal kan måske se hvorfor, men det behøver man ikke at vide
+noget om i denne opgave.)
+
+\begin{opgave}
+  Brug ovennævnte faktum, og ideen i Opgave \ref{opg-sqr-n-mul} til at designe en metoder
+  der beregner $a^{e}\mod N$ for vilkårlige positive tal $a,e$ og $N$. Hvor mange
+  multiplikationer og divisioner skal man bruge med jeres metode, hvis $e=1026$? (NB: den
+  naive metode bruger 1025 multiplikationer.)
+\end{opgave}
+
+\section{Digitale Signaturer med RSA}
+Indtil nu har vi kun beskæftiget os med \emph{konfidentialitet}---det vil sige
+hemmeligholdelse af beskeder ved hjælp af kryptering. En anden lige så vigtig del af
+kryptologi er \emph{autentifikation}---at bevise over for andre, at man er den man påstår
+man er, og at bevise at en besked er kommet uændret frem.
+
+Lad os kort overvej hvordan ganske almindelige underskrifter (signaturer) virker, eller i
+hvert fald burde virke. Ved at underskrive et dokument:
+\begin{itemize}
+
+\item Kan det afgøres, at det er mig personligt der har skrevet under;
+
+\item Er jeg juridisk bundet af indholdet;
+
+\item Kan modetageren, ved fremvisning af dokumentet til en tredjepart, overbevise
+  tredjeparten at ovenstående to punkter holder.
+
+\end{itemize}
+
+Først forsøger vi at implementere den digitale version af underskrifter på følgende måde,
+der ligner den analoge udgave: Når Alice ønsker at underskrive et dokument, vedhæfter hun
+en indscanning af sin underskrift til dokumentet, og sender det til Bob.
+
+\begin{opgave}
+  Hvorfor er ovenstående løsningsforlag en meget dårlig ide?
+\end{opgave}
+
+Det er meget vigtigt, at underskriften på en eller anden måde hænger sammen med indholdet
+af dokumentet og vedkommende der skriver under. Her kommer RSA os endnu en gang til hjælp.
+
+\begin{opgave}
+  Argumenter for, at der for RSA gælder:
+  \[
+    m = \Dec(sk, \Enc(pk, m)) = \Enc(pk, \Dec(sk, m)).
+  \]
+\end{opgave}
+
+Brug nu dette til at vise hvordan Alice kan sende en kærligheds besked til Bob, sådan at
+Bob kan verificere, at den virkelig kommer fra Alice og kan senere bevise dette overfor en
+tredje person.
+
+\begin{opgave}
+  Alices værste fjende Eva er vild med Bob og ville utrolig gerne erstatte $m$ med en
+  meddelelse $m'$ hvor Alice siger farvel for altid til Bob. Argumenter for hvorfor det
+  ikke er muligt for Eva.
+\end{opgave}
+
+\begin{opgave}
+  Lad den offentlige RSA nøgle være $N=33$ og $e=3$, og den hemmelige nøgle $d=7$. Hvad
+  er underskriften på meddelelsen $m=2$
+\end{opgave}
+
+Ovenfor har stiltiende antaget at Bob allerede har den offentlige nøgle han skal bruge for
+at checke Alices underskrift. I praksis er denne nøgle naturligvis nødt til at komme et
+eller andet sted fra, f.eks.~kan det være Bob på sin maskine har en database hvor han
+kan slå offentlige nøgler op for dem han kommunikerer med. Stort set det samme som
+telefonnummerlisten på en mobiltelefon.
+
+\begin{opgave}
+  Antag at Bob opbevarer offentlige nøgler i en database, som beskrevet ovenfor på sin
+  PC. Alice og Bob er stadig forelskede, og Eva er præcis lige så jaloux som før. Bob har
+  offentlige nøgler for både Alice og Eva på sin liste. En nat bryder Eva ind på Bobs PC,
+  og får adgang til at se og evt.~manipulere med Bobs liste med offentlige nøgler uden at
+  Bob opdager noget. Beskriv hvad hun kan gøre for at ødelægge forholdet mellem Alice og
+  Bob. Drag en general konklusion omkring hvordan offentlige signatur nøgler skal
+  behandles.
+\end{opgave}
+
+% \section{Deling af den hemmelige nøgle}
+
+% Tallene for RSA nøglerne i foregående opgave var meget små. I praksis er tallene der skal
+% bruges til RSA så store, at de på ingen måde kan huskes i hovedet.\footnote{F.eks.~så er
+%   det $N$, som Google bruger, tallet:
+% \seqsplit{2615073280026590252903365549957964178120472343236249548198080246522954541924234663429456876993078700348235101809202951838130346856444181606337830884768225374045320661612723101197638135408804245968278009850296969812268061618736546574489717583278955989272571032083803503141871690563678502151439769436572188296536903222111934432083683774162878318328766219702021097510468911571294522502085862670413368774167596123461771080624398928225252370213091857946607798952266301268832911042058882223}
+% }
+% Man er derfor nødt til at opbevarer den hemmelige nøgle et eller andet sted, og der er
+% derfor en vis risiko for, at den kan blive stjålet.
+
+% Vi skal nu se nærmere på en teknik til at reducere risikoen ved tyveri, ved at dele den
+% hemmelige nøgle op i to dele. Det gør man ved at vælge to tal $d_{1}$ og $d_{2}$ helt
+% tilfældigt, dog sådan at
+% \[
+%   d_{1} + d_{2} = d.
+% \]
+% Nu opbevares disse to tal forskellige steder, f.eks.~på to forskellige computere. I
+% eksemplet fra opgave 2.4, hvor $d=7$, kunne vi f.eks.~bruge $d_{1}=17$ og $d_{2}=-10$.
+
+% \begin{opgave}
+%   Argumenter for, at hvis nogen får fat i $d_{1}$ eller $d_{2}$, men ikke dem begge, så
+%   har vedkommende stadig ingen anelse om hvad $d$ er.
+% \end{opgave}
+
+% Ideen er nu at lave en underskrift på $m$ ved, at den computer der har $d_{1}$ beregner
+% $m^{d_{1}}\mod N$, og computeren med $d_{2}$ beregner $m^{d_{2}}\mod N$. Begge ``halve
+% signaturer'' kan nu samles:
+
+% \begin{opgave}
+%   Vis at man kan beregne en signatur på $m$ med den private nøgle $sk=(N,d)$ som:
+%   \[
+%     (m^{d_{1}} \mod N)(m^{d_{2}} \mod N) \mod N.
+%   \]
+%   Hint\footnote{Brug at $(a\mod N)(b\mod N)\mod N = a\cdot b \mod N$.}
+% \end{opgave}
+
+% \begin{opgave}
+%   Brug eksemplet fra før, $d_{1}=17$ og $d_{2}=-10$, til at udregne signaturen på
+%   beskeden $m=3$ således at den er gyldig for den tidligere offentlige nøgle med $N=33$
+%   og $e=3$. ($e$ kan bruges til at kontrollere at signaturen er korrekt.)
+% \end{opgave}
+
+
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

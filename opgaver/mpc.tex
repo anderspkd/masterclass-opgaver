@@ -1,0 +1,398 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, total={5.5in,8in}]{geometry}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{seqsplit}
+\usepackage{framed}
+
+\newtheoremstyle{opgavedd}{1em}{1em}{\itshape}{0pt}{\bfseries}{:}{ }{\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}}
+
+\theoremstyle{opgavedd}
+\newtheorem{opgave}{Opgave}[section]
+
+\newcommand\Enc{\ensuremath{\mathsf{Enc}}}
+\newcommand\Dec{\ensuremath{\mathsf{Dec}}}
+\newcommand\nsmod{\ensuremath{\text{ mod }}}
+
+\begin{document}
+\title{Opgavesæt. MasterClass i Matematik}
+\author{Aarhus Universitet}
+\date{2018}
+\maketitle
+
+\section{Introduktion til Sikre Beregninger}
+Disse opgaver skal illustrere, hvordan man kan regne på data med maksimal sikkerhed, så at
+sige uden at kigge på de tal, man regner på. Her er en intuitiv forklaring på, hvad vi er
+ude efter: Lad os sige at en mængde af personer ansat i en virksomhed gerne vil vide, hvad
+de tjener i gennemsnit. Ingen af dem er villige til at afsløre for andre, hvor meget de
+tjener, men har det OK med at gennesnittet bliver offentliggjort.
+
+\begin{opgave}
+  En måde at udregne gennemsnittet er at alle fortælle en særligt betroet person deres
+  løn. Denne betroet person udregner gennesnittet og fortælle alle de andre
+  resultatet. Er dette en god løsning?
+\end{opgave}
+
+I stedet kunne vi gøre følgende: Vi anbringer en lommeregner i en kasse, som er lukket,
+men vi sørger for en lille åbning i kassen så man kan stikke en hånd ind og trykke på
+tasterne. Men man kan ikke se, hvad der står på displayet. Nu går man efter tur hen til
+kassen, stikker hånden ind, taster sin løn, og trykker på plus tasten (vi antager at folk
+godt kan fornemme hvor tasterne sidder). Den sidste person trykker på ``$=$''-tasten. Nu
+åbner vi kassen og ser, hvad der står på displayet.
+
+Lad os kalde antal personer, der var med for $n$ og summen på displayet for $S$. Det
+gennemsnit $G$ vi er ude efter kan alle nu regne ud som $G=S/n$.
+
+Det vi er ude efter her er at holde de private data så private som muligt, i den forstand
+at \emph{den eneste nye information, der bliver frigivet, er det resultat vi er ude
+  efter.} Den metode, vi bruger for at beregne resultatet, siges at være \emph{sikker},
+hvis den opfylder denne betingelse.
+
+\begin{opgave}
+  Med denne definition, er det så et problem at det vi ser på lommeregneren, når vi åbner
+  kassen, ikke er $G$, men $S$?
+\end{opgave}
+
+\section{Sikker Addition med Elektronisk Kommunikation}
+Det er ikke voldsomt praktisk at skulle håndtere kasser og lommeregnere, og slet ikke
+hvis man ikke kan mødes, men må kommunikere over f.eks.~internettet. Heldigvis findes der
+mere praktiske løsninger, og vi beskriver en af dem her. Vi vil se på hvoran man beregner
+summen af nogle private tal (det er nok til at finde et gennemsnit, som vi har set).
+
+Vi antager, bare for at gøre det nemmere at regne på, at ingen tjener så meget at summen
+$S$ bliver større end 100. Og vi antager at der kun er 3 personer der deltager. Lad os
+kalde den $i$'te person der er med for $P_{i}$, og lad hans løn være $x_{i}$. Nu vælger
+$P_{i}$ tilfældige tal $a_{i}$, $b_{i}$ modulo $100$. Dvs.~$a_{i}$ og $b_{i}$ er
+tilfældigt valgte i intervallet $[0\dots 99]$. Han sætter
+$c_{i}=x_{i}-(a_{i}+b_{i})\nsmod{100}$. Dette sikre, at
+\[
+  x_{i} = (a_{i} + b_{i} + c_{i}) \nsmod 100.
+\]
+Nu sender han hemmeligt $(a_{i},b_{i})$ til $P_{3}$; $(a_{i},c_{i})$ til $P_{2}$; og
+$(b_{i},c_{i})$ til $P_{1}$. ``Hemmeligt'' betyder her at ingen tredje person får
+kendskab til $a_{i}$, $b_{i}$ eller $c_{i}$. Det kunne man f.eks.~sikre med RSA
+kryptering. Dette kaldes at ``distribuere inputs''. Men bemærk, at da $P_{i}$ selv er en
+af $P_{1}, P_{2}, P_{3}$, skal han sende to tal ``til sig selv''---det betyder
+selvfølgelig bare at han gemmer dem lokalt på sin egen computer.
+
+\begin{opgave}
+  Et tal-eksempel: antag $i=1$, og $x_{1}=23$. Lad os sige at $P_{1}$ har valgt
+  $a_{1}=50$, $b_{1}=76$. Beregn $c_{1}$.
+\end{opgave}
+
+\begin{opgave}
+  Lad os sige folk har følgende data:
+  \begin{align*}
+    P_{1}: b_{1} = 76,\ c_{1} = \text{??},
+    && P_{2} : a_{1} = 50,\ c_{1} = \text{??},
+    && P_{3}:a_{1}=50,\ b_{1}=76.
+  \end{align*}
+  Antag nu at $P_{3}$ forsøger at regne ud hvad $x_{1}$ er. Bemærk at han ikke bare kan
+  regne værdien ud direkte: Han har fået $a_{1} = 50$ og $b_{1} = 76$, men han mangler
+  $c_{1}$. Nu spekulerer han på om $x_{1}$ kunne være $1$. Hvad skal $c_{1}$ så være?
+\end{opgave}
+
+\begin{opgave}
+  Samme som forrige opgave, men nu gætter $P_{3}$ på at $x_{1}=47$.
+\end{opgave}
+
+\begin{opgave}\label{opg:secure-inputs}
+    Argumenter generelt for at $P_{3}$ ingen anelse har om hvad $x_{1}$ er for et
+    tal. (Bemærk at med samme argument kan man vise at $P_{2}$ heller ikke har noget som
+    helst information om $x_{1}$.)
+\end{opgave}
+
+Efter at alle har distribueret deres inputs som beskrevet ovenfor, har hver deltager 6
+tal. F.eks.~har $P_{1}$ følgende tal:
+\[
+  P_{1}:(b_{1},c_{1}),\ (b_{2},c_{2}),\ (b_{3},c_{3}).
+\]
+
+\begin{opgave}
+  Lad
+  \begin{align*}
+    A&=(a_{1} + a_{2} + a_{3})\mod{100},\\
+    B&=(b_{1} + b_{2} + b_{3})\mod{100},\\
+    C&=(c_{1} + c_{2} + c_{3})\mod{100}.
+  \end{align*}
+  Med de tal $P_{1}$ har modtaget kan han nu beregne $B$ og $C$. Hvilke tal
+  kan $P_{2}$ udregne?
+\end{opgave}
+
+Det sidste der sker i vores løsning er derfor, at $P_{1}$ beregner $B$ og $C$ tallene til
+de andre. Tilsvarende sender $P_{2}$ tallene $A$, $C$ og $P_{3}$ sender $A$, $B$.
+
+\begin{opgave}
+  Vis at alle nu kan beregne $S$, som jo var $x_{1} + x_{2} + x_{3}$ ved at vise at
+  \[
+    S = (A + B + C)\mod 100.
+  \]
+\end{opgave}
+
+(I kan med fordel nedskrive en samlet oversigt over den løsning vi har set på.)
+
+\clearpage
+
+Spørgsmålet er nu om denne løsning er sikker i samme forstand som den med lommeregneren i
+kassen? Vi har allerede set at i den første fase, hvor man distribuerer inputs, er der
+ikke blevet afsløret noget: ifølge.~opgave~\ref{opg:secure-inputs} har ingen af deltagerne
+nogen som helst information om hvad de andre tjener, selv efter at de har modtaget deres
+værdier af $a_{i}$, $b_{i}$, $c_{i}$ fra de andre. Deteneste nye der sker til sidst, er at
+$A$, $B$ og $C$ bliver offentliggjort.
+
+\begin{opgave}
+  Lad os se på situationen fra $P_{3}$'s synspunkt: han ved allerede hvad $A$, $B$ er. Så
+  det eneste nye han får at vide er $C$. Husk at sikkerhed her betyder at det eneste nye
+  vi har lov at afsløre er $S$, for det er det resultat vi gerne vil beregne. Vis at hvis
+  $P_{3}$ får $S$ udleveret, så kan han nemt beregne $C$.
+\end{opgave}
+
+Konklusion: Hvis $P_{3}$ får værdien af $S$ at vide (og det var jo det der var meningen),
+så kan han nemt selv regne ud hvad $C$ er, så derfor gør det ikke noget at han får $C$. Vi
+kan også konkludere at vi har en metode til at lægge tal sammen på en sikker måde, således
+at summen er det eneste der bliver frigivet.
+
+\section{Sikker Multiplikation}
+I det forrige har vi kigget på hvordan vi kan lave en metode til at lægge tal sammen på en
+sikker måde. Følgende er løsningen vi kom frem til:
+
+\begin{framed}
+  \begin{center}
+    \textbf{Protokol Sikker Addition}
+  \end{center}
+  \begin{description}
+  \item[Distribuere Inputs.] Hver deltager har som input et tal $x_{i}$. Han vælger
+    $a_{i}$, $b_{i}$ og $c_{i}$ tilfældigt så $x_{i} = (a_{i}+b_{i}+c_{i})\nsmod{100}$, og
+    sender to af tallene til hver deltager $P_{j}$ (inklusiv sig selv), således at $P_{1}$
+    ikke ved noget om $a_{i}$, $P_{2}$ ikke ved noget om $b_{i}$, og $P_{3}$ ikke ved
+    noget om $c_{i}$ medmindre $P_{j}$ kender $x_{i}$.
+
+  \item[Lokal Beregning.] Hver deltager $P_{i}$ beregner to af værdierne $A$, $B$, $C$ for
+    de to af $A$, $B$ og $C$ som $P_{i}$ kender leddene for.
+
+  \item[Beregn Resultat.] Hver deltager $P_{i}$ offentliggør de to $A$, $B$, $C$-værdier
+    han kan beregne, og alle beregner summen $S=(A+B+C)\nsmod{100}$.
+  \end{description}
+\end{framed}
+
+Det er naturligt at spekulere på om man også kan gange tal sammen på en sikker
+måde. Svaret er ja, og vi skal se hvordan. Lad os sige at $P_{1}$ har et tal $x$, og
+$P_{2}$ har et tal $y$. Vi vil gerne finde ud af hvad $x\cdot y$ er, uden at nogen får
+andet at vide om $x$ og $y$.
+
+Antag at $P_{1}$ distribuerer $x$ på samme måde som vi gjorde tidligere. Det betyder at
+han vægler $a_{1}$, $b_{1}$, $c_{1}$ så $x=(a_{1} + b_{1} + c_{1})\nsmod{100}$, og giver
+to af tallene til hver af de andre: $P_{1}$ har selv $b_{1}$ og $c_{1}$; $P_{2}$ får
+$a_{1}$ og $c_{1}$; og $P_{3}$ får $a_{1}$ og $b_{1}$. Vi antager at $P_{2}$ gør det samme
+med $y=a_{2} + b_{2} + c_{2}$. Nu er det klart, at:
+\begin{align}
+  \nonumber
+  x\cdot y &\nsmod{100} \\
+  \nonumber
+           &= (a_{1} + b_{1} + c_{1})(a_{2} + b_{2} + c_{2}) \nsmod{100}, \\
+  \label{eq:giantmess}
+                       &= (a_{1}a_{2} + a_{1}b_{2} + a_{1}c_{2} + b_{1}a_{2} + b_{1}b_{2}
+                         + b_{1}c_{2} + c_{1}a_{2} + c_{1}b_{2} + c_{1}c_{2}) \nsmod{100}.
+\end{align}
+Det fantastiske er nu, at når $x$ og $y$ er distribueret som vi har beskrevet, så kan hver
+af de summander der indgår ovenfor, beregnes af mindst én af deltagerne.
+
+\begin{opgave}
+  Vis at når $x$ og $y$ er distribueret som ovenfor, og ved omskrivning af
+  Ligning~\ref{eq:giantmess}, så kan $P_{1}$ beregne et tal $u_{1}$, $P_{2}$ kan beregne
+  $u_{2}$ og $P_{3}$ kan beregne $u_{3}$, så
+  \[
+    x\cdot y \mod{100} = (u_{1} + u_{2} + u_{3}) \mod{100}.
+  \]
+\end{opgave}
+
+Dette betyder at vi kan finde det resultat vi er ude efter hvis vi på en sikker måde kan
+finde summen af $u_{1}$, $u_{2}$ og $u_{3}$, men det er jo netop det vi allerede har
+konstrueret!
+
+\section{Dating for Kryptologer}
+I dette afsnit møder vi to personer man tit støder på i kryptografi: Alice og Bob. De har
+lige mødt hinanden, og Alice overvejer om hun vil på date med Bob, som overvejer noget
+lignende med Alice. Men ingen af dem er sikre hvad den anden tænker, så derfor er
+problemet at begge er alt for generte til bare at spørge---det ville jo være frygtelig
+pinligt hvis hun/han sagde nej!
+
+Heldigvis kan vi med vores metode til sikker multiplikation hjælpe Alice og Bob til at
+finde ud af om der er gensidig interesse, uden at det bliver pinligt for nogen: Alice
+vælger et tal $x$, sådan at $x=1$ hvis hun er interesseret i Bob, og $x=0$ ellers. På
+samme måde vælger Bob et tal $y$ hvor $y=1$ hvis han er interesseret og 0 ellers. Det er
+nu nemt at indse at $x\cdot y=1$ gælder præcis hvis begge er interesseret, og ellers er
+$x\cdot y=0$.
+
+I sidste afsnit har vi set en sikker metode der kan bruges til at regne $x\cdot y$ ud,
+altså en metode der ikke afslører noget som helst om $x$ og $y$, ud over netop $x\cdot
+y$. Alice og Bob kan bruge netop sådan en metode til at løse deres problem:
+
+\begin{opgave}
+  Er ovenstående løsning sikker, såfremt både Alice og Bob er ærlige? Hvorfor/hvorfor ikke?
+\end{opgave}
+
+% \begin{opgave}
+%   Vis, at hvis Alice har valgt $x=0$, så ved hun hvad resultatet er, allerede inden vi har
+%   udført beregningen. Brug dette til at argumentere for, at hvis vores metode til
+%   multiplikation er sikker, og hvis Alice ikke er interesseret, så finder hun aldrig ud af
+%   om Bob var interesseret.
+% \end{opgave}
+
+Den metode til multiplikation vi har set er for tre deltagere, så det kræver at Alice og
+Bob har en tredje person til at hjælpe sig. men bemærk at den tredje person ikke får nogen
+som helst information, så vi behøver at stole på at han er diskret.
+
+\newpage
+
+\section{Beskyttelse Mod Snyd}
+Indtil nu har vi antaget at spillerne altid følger protokollen. Det er dog ikke altid en
+rimelig antagelse, da en spiller nogle gange kan have interesse i at afvige fra
+protokollen. I det tilfælde kunne han måske være i stand til at lære noget mere
+information end det han bør eller han kunne få beregningen til at give et forkert
+resultat.
+
+En måde at beskytte sig imod afvigelser er at indbygge ekstra foranstaltninger i
+protokollen. Men først skal vi overveje præcis hvilke afvigelser vi vil og i det hele
+taget kan beskytte os imod. Lad os derfor kigge på protokollen for Sikker Addition fra
+$P_{1}$'s synsvinkel. $P_{1}$ vælger værdierne $a_{1}$, $b_{1}$ og $c_{1}$ sådan at
+$x_{1}=a_{1}+b_{1}+c_{1}\nsmod{100}$, hvorefter han sender $(a_{1},c_{1})$ til $P_{2}$ og
+$(a_{1},b_{1})$ til $P_{3}$.
+
+\begin{opgave}
+  Betragt følgende to måder hvorpå $P_{1}$ kan snyde:
+  \begin{enumerate}
+  \item $P_{1}$ vælger i stedet værdier $a_{1}'$, $b_{1}'$, $c_{1}'$ sådan at $x_{1}\neq
+    a_{1}'+b_{1}'+c_{1}'\nsmod{100}$.
+  \item $P_{1}$ sender $a_{1},c_{1}$ til $P_{2}$ og $a_{1}',b_{1}$ til $P_{3}$ hvor
+    $a_{1}\neq a_{1}'$.
+  \end{enumerate}
+  Hvad kan $P_{1}$'s input være i tilfælde 1? Hvad med tilfælde 2?\footnote{Hint: Tænk på
+    vores begreb om sikkerhed som værende den hvor vores protokol skal opføre sig som om
+    vi havde en betroet 3.-part, der beregner resultatet ud fra deltagernes input og derefter
+    giver de korrekte output til deltagerne.}
+\end{opgave}
+
+I de næste opgaver kigger vi på hvordan vi beskytter os imod angreb af type 2.
+
+\begin{opgave}
+  Hvordan kan $P_{2}$ beskytte sig mod angreb af type 2?
+\end{opgave}
+
+\begin{opgave}
+  Argumenter for hvordan vi kan undgå at deltagerne snyder med de værdier de offentliggør
+  af $A,B,C$. F.eks., hvordan kan vi sikre os at $P_{1}$ ikke sender en forkert værdi af $B$?
+\end{opgave}
+
+\newpage
+
+\section{Opsætning af Sikre Beregninger}
+
+I dette afsnit prøver vi at kombinere det vi har lært om RSA med sikre beregninger. I
+input fasen til sikre beregninger er det nødvendigt at sende sine tal til den rette
+deltager i fortrolighed. For at give den rette opsætning anbefales det at sætte sig i
+grupper af tre med en blok papir hver.
+
+\begin{opgave}
+  Beskriv hvad der kan gå galt hvis vi ikke har en PKI sat op som parterne stoler på.
+\end{opgave}
+
+\begin{opgave}
+  Sid sammen i en gruppe på tre. I er nu hver en spiller i en sikker beregnings
+  protokol. Opgaven er at bruge RSA til at sætte sikre beregninger op. Hver spiller gør
+  følgende:
+  \begin{itemize}
+  \item Vælg to primtal større end 10 (men mindre end 100) og kald dem $p$ og $q$. Hold
+    disse hemmelige, og beregn $N=pq$.
+  \item I har set Eulers phi funktion i dag. Brug jeres viden om denne og største fælles
+    divisor ($\mathsf{gcd}$) algoritmen til at finde $ed\equiv1\mod\varphi(N)$.
+  \item Offentliggør $(e,N)$ ved at lægge et stykke papir foran jer med disse tal på,
+    således det er tydeligt hvad er $e$, og hvad er $N$.
+  \item Vælg en hemmelighed i intervallet $[0\dots 99]$ og skriv den ned på en hemmelig
+    lap papir.
+  \item Vælg to tilfældige tal som når vi distribuerede inputs i de forrige afsnit. Hold
+    disse tilfælde hemmelige også.
+  \item Krypter nu jeres tilfældige tal og skriv hvem de er til. Vis krypteringen til alle
+    midt på bordet. Eksempel: $P_{1}$ offentliggør RSA krypteringer af $a_{1}$ og $c_{1}$
+    med $P_{2}$ som modtager. $P_{1}$ offentliggør også krypteringen af $a_{1}$ og $b_{1}$
+    til $P_{3}$.
+  \end{itemize}
+\end{opgave}
+
+\begin{opgave}
+  Forsættelse af opgaven ovenfor. Når alle er klar og har dekrypteret deres tilsendte
+  værdier kan i prøve at gennemføre additions protokollen ovenfor.
+\end{opgave}
+
+\begin{opgave}
+  Prøv nu multiplikations protokollen. I kan starter med tallene i oprindeligt
+  dekrypterede.
+\end{opgave}
+
+\begin{opgave}
+  Forsættelse af opgaven. I de forrige to opgaver har i regnet på krypteret tal. Afslør
+  for hinanden jeres hemmelige værdier og se om resultatet er rigtigt.
+\end{opgave}
+
+\section{Sikre Beregninger med enkelt secret sharing}
+Vores løsning hidtil har baseret sig på en bestemt type secret sharing, kaldet
+\emph{replikeret secret sharing}, hvor hver deltager modtager to værdier, som om det kun
+er én hemmelighed, der er blevet delt. Grunden til det var, at så kunne man nemt både lave
+sikker addition og multiplikation. Hvis man f.eks.~kun vil lave addition, kan man faktisk
+klare sig med en simplerer løsning:
+
+\begin{opgave}
+  Brug princippet om at skrive en hemmelighed som en sum af tilfældige tal til at designe
+  en ny protokol til sikker addition hvor hver spiller kun modtager én værdi.
+\end{opgave}
+
+\begin{opgave}
+  I forrige løsning, hvor mange deltagere skal så gå sammen før de kan bryde protokollen?
+\end{opgave}
+
+Ved almindeligt secret sharing bliver det nu meget problematisk at lave
+multiplikation. Der skal noget ekstra forarbejde til, som vi vil se på i det
+følgende. Først vil vi se på hvordan vi klarer \emph{skalarmultiplikation}. Dvs.~vi vil
+gerne gange en delt hemmelighed $x$ med et tal $\alpha$, sådan at vi opnår en secret
+sharing af $\alpha\cdot x$.
+
+\begin{opgave}
+  Hvis deltagerne har delt $x$ mellem sig og samtidig kender $\alpha$, hvad skal de så
+  gøre for at opnå en deling af $\alpha\cdot x$?
+\end{opgave}
+
+Lad os nu antage at vi er givet en sikker boks, der på forhånd har delt mellem deltagerne
+secret sharings af 3 værdier $a,b,c$ sådan at $a\cdot b = c$. Dvs.~$P_{i}$ har værdierne
+$a_{i},b_{i},c_{i}$, hvor $a=a_{1}+a_{2}+a_{3}$, $b=b_{1}+b_{2}+b_{3}$ og
+$c=c_{1}+c_{2}+c_{3}$.
+
+\begin{opgave}
+  Antag at part $P_{i}$ har værdierne $(x_{i}, y_{i})$. Overbevis jer selv om at der ikke
+  bliver afsløret noget information ved at offentliggøre værdierne
+  $\varepsilon_{i}=x_{i}-a_{i}$, $\delta_{i}=y_{i}-b_{i}$.
+\end{opgave}
+
+\begin{opgave}
+  Nu kan vi offentligt beregne
+  $\varepsilon=\varepsilon_{1}+\varepsilon_{2}+\varepsilon_{3}$ og
+  $\delta=\delta_{1}+\delta_{2}+\delta_{3}$. Skriv nu værdien $x$ ud fra $a$ og
+  $\varepsilon$ og skriv $y$ ud fra $b$ og $\delta$. Brug dette til at skrive hvad
+  $x\cdot y$ er som et udtryk af $a,b,\varepsilon,\delta$.
+\end{opgave}
+
+Dette betyder at vi kan finde resultatet $x\cdot y$ på en sikker måde hvis vi på en sikker
+måde kan beregne addition og skalarmultiplkation. Men det er jo det vi allerede har
+konstrueret!
+
+\begin{opgave}
+  Nedskriv nu en samlet løsning (en protokol) for hvordan man laver en sikker
+  multiplikation hvis vi antager at deltagerne i forvejen har delt $a,b$ og $c=a\cdot b$
+  imellem sig.
+\end{opgave}
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
